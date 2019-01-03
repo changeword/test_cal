@@ -24,12 +24,12 @@ public class test {
 
     public static void main(String args[]) throws Exception {
         test test = new test();
-        String select_sql = "select t1.week,t2.expression from top_week_timeline t1,top_taglib_week t2 where t1.weeklabel5 = t2.urid ";
+        String select_sql = "select t1.week,t2.expression from top_week_timeline t1,top_taglib_week t2 where t1.weeklabel5 = t2.urid and t1.fundtype = '新单+续期' and t1.customer= '友邦人寿' ";
         String update_sql = "update top_week_timeline t set t.forecast_money = ";
         List<Map<String,String>> list = test.queryForFormula(select_sql);
         for(Map<String,String> map:list){
             BigDecimal money = test.testWeek(map.get("expression"));
-            String sql_temp = update_sql + money + " where t.week = '" + map.get("week") + "'" + " and t.fundtype = '正常赔款' ";
+            String sql_temp = update_sql + money + " where t.week = '" + map.get("week") + "'" + " and t.fundtype = '新单+续期' and t.customer= '友邦人寿' ";
             int a = test.update(sql_temp);
             System.out.println(a);
         }
@@ -37,7 +37,7 @@ public class test {
 
 
     public BigDecimal testWeek(String formulaname) throws Exception {
-        String sql = "select sum(money) money from all_data_fund_tmp where fundtype = '正常赔款' ";
+        String sql = "select sum(money) money from all_data_fund_tmp where fundtype = '新单+续期' and customer= '友邦人寿' ";
         if (formulaname != null & !"".equals(formulaname)) {
             List<String> list1;
             List<String> list2 = new ArrayList<>();
@@ -53,17 +53,15 @@ public class test {
                     List<String> list3 = transferArrayToList(con);
                     StringBuilder follow = new StringBuilder();
                     for (int i = 0; i < list3.size() / 2; i++) {
-                        if (i % 2 == 0) {
-                            follow = new StringBuilder();
-                        }
                         follow.append(" and ");
                         follow.append(list3.get(2 * i + 1));
                         follow.append(" = ");
                         follow.append(list3.get(2 * i));
-                        if (i % 2 == 1) {
+                        if (i == list3.size() / 2 -1) {
                             follow.append(" group by " + list3.get(2 * i + 1) + "," + list3.get(2 * i - 1));
                             String sql_temp = sql + follow.toString();
                             String money = query(sql_temp).get("money");
+                            System.out.println(sql_temp);
                             reverseList.add(money);
                         }
                     }
@@ -77,7 +75,7 @@ public class test {
                 }
             }
             //运算符号
-            Pattern pa = Pattern.compile("[\\+\\-\\*\\/]");
+            Pattern pa = Pattern.compile(IP4);
             Matcher m = pa.matcher(formulaname);
             while (m.find()) {
                 list2.add(m.group());
